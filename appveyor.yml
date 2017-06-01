@@ -1,8 +1,14 @@
 image: Visual Studio 2015
 version: 1.0.{build}
+
+environment:
+  matrix:
+    - PLATFORM: x64
+      BUILDTYPE: Debug
+
 clone_folder: c:\projects\leveldb
 init:
-- cmd: '"C:\Program Files\Microsoft SDKs\Windows\v7.1\Bin\SetEnv.cmd" /x64'
+- if "%PLATFORM%"=="x64" call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" amd64
 build_script:
 - cmd: >-
     dir C:\Libraries\boost_1_62_0\lib64-msvc-14.0
@@ -15,7 +21,7 @@ build_script:
 
     cmake --version
 
-    cmake -G "NMake Makefiles" .. -DCMAKE_INSTALL_PREFIX=../../install/appveyor -DCMAKE_BUILD_TYPE=Debug -DBOOST_LIBRARYDIR=C:\Libraries\boost_1_62_0\lib64-msvc-14.0 -DBOOST_ROOT=C:\Libraries\boost_1_62_0
+    cmake -G "NMake Makefiles" .. -DCMAKE_INSTALL_PREFIX=../../install/appveyor -DCMAKE_BUILD_TYPE=%BUILDTYPE% -DBOOST_LIBRARYDIR=C:\Libraries\boost_1_62_0\lib64-msvc-14.0 -DBOOST_ROOT=C:\Libraries\boost_1_62_0
 
     nmake install
 test_script:
