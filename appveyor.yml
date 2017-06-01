@@ -3,10 +3,10 @@ version: 1.0.{build}
 
 environment:
   matrix:
-    - PLATFORM: x64
-      BUILDTYPE: Debug
     - PLATFORM: x86
-      BUILDTYPE: Release
+    - PLATFORM: x86
+    - BUILDTYPE: Release
+    - BUILDTYPE: Debug
 
 clone_folder: c:\projects\leveldb
 init:
