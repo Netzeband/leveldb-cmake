@@ -204,6 +204,8 @@ install(TARGETS leveldb
     LIBRARY DESTINATION lib
     ARCHIVE DESTINATION lib)
 
+INSTALL(DIRECTORY "include" DESTINATION ".")
+	
 ##################################### TESTS #######################################
 # Every leveldb test file has to be compiled as an independant binary
 # because of the test framework used by leveldb.
