@@ -5,7 +5,11 @@
 #include "leveldb/c.h"
 
 #include <stdlib.h>
-#include <unistd.h>
+
+#ifndef WIN32
+#    include <unistd.h>
+#endif
+
 #include "leveldb/cache.h"
 #include "leveldb/comparator.h"
 #include "leveldb/db.h"

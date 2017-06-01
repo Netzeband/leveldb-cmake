@@ -9,7 +9,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
-#include <unistd.h>
+
+#ifndef WIN32
+#    include <unistd.h>
+#else
+	 uint32_t geteuid(void) { return 0; }
+#endif
 
 const char* phase = "";
 static char dbname[200];
@@ -22,7 +27,13 @@ static void StartPhase(const char* name) {
 static const char* GetTempDir(void) {
     const char* ret = getenv("TEST_TMPDIR");
     if (ret == NULL || ret[0] == '\0')
+	{	
+#ifndef WIN32
         ret = "/tmp";
+#else
+        ret = ".";
+#endif
+	}
     return ret;
 }
 
@@ -141,7 +152,7 @@ static char* FilterCreate(
     int num_keys,
     size_t* filter_length) {
   *filter_length = 4;
-  char* result = malloc(4);
+  char* result = (char*)malloc(4);
   memcpy(result, "fake", 4);
   return result;
 }

@@ -357,7 +357,7 @@ void SkipList<Key,Comparator>::Insert(const Key& key) {
     // the loop below.  In the former case the reader will
     // immediately drop to the next level since NULL sorts after all
     // keys.  In the latter case the reader will use the new node.
-    max_height_.NoBarrier_Store(reinterpret_cast<void*>(height));
+    max_height_.NoBarrier_Store(reinterpret_cast<void*>(height)); // Todo: Is this cast right on 64bit systems?
   }
 
   x = NewNode(key, height);
