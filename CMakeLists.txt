@@ -3,11 +3,16 @@
 #
 # Keep the original copyright and license of this repository in mind.
 #
+# It was adapted by Andre Netzeband to work with LevelDB version 1.20.
+#
 ########################################################################################### 
 
 cmake_minimum_required(VERSION 3.0.2 FATAL_ERROR)
 
 project(leveldb CXX)    
+
+include(CTest)
+
 set(CMAKE_DEBUG_POSTFIX "d")
 
 set(Boost_USE_STATIC_LIBS ON)
@@ -18,6 +23,7 @@ find_package(Boost COMPONENTS
     date_time
     filesystem
     system
+	thread
     REQUIRED)
 
 set(SNAPPY_LIBRARY "")
@@ -74,8 +80,10 @@ set(LEVEL_DB_FILES
     include/leveldb/table.h
     include/leveldb/table_builder.h
     include/leveldb/write_batch.h	
+	
 	db/builder.cc
     db/builder.h
+	db/c.cc
 	db/db_impl.cc
     db/db_impl.h
 	db/db_iter.cc
@@ -90,11 +98,11 @@ set(LEVEL_DB_FILES
     db/log_reader.h
 	db/log_writer.cc
     db/log_writer.h
-    db/skiplist.h
-    db/snapshot.h
 	db/memtable.cc
-    db/memtable.h
-	db/repair.cc
+	db/memtable.h
+	db/repair.cc	
+    db/skiplist.h
+	db/snapshot.h
 	db/table_cache.cc
     db/table_cache.h
 	db/version_edit.cc
@@ -102,6 +110,8 @@ set(LEVEL_DB_FILES
 	db/version_set.cc
     db/version_set.h
 	db/write_batch.cc
+	db/write_batch_internal.h
+	
 	table/block.cc
     table/block.h
 	table/block_builder.cc
@@ -115,9 +125,10 @@ set(LEVEL_DB_FILES
 	table/merger.cc
     table/merger.h
 	table/table.cc
-	table/table_builder.cc
+	table/table_builder.cc	
 	table/two_level_iterator.cc
     table/two_level_iterator.h
+	
 	util/arena.cc
     util/arena.h
     util/bloom.cc
@@ -139,9 +150,12 @@ set(LEVEL_DB_FILES
 	util/options.cc
     util/random.h
 	util/status.cc
-    port/port.h)
+	
+    port/port.h
+	)
 
 if(WIN32)
+	MESSAGE(STATUS "Enable Win32 port...")
     list(APPEND LEVEL_DB_FILES
         port/port_win.h
         port/port_win.cc
@@ -149,6 +163,7 @@ if(WIN32)
         util/win_logger.cc
         util/env_boost.cc)
 else()
+	MESSAGE(STATUS "Enable Posix port...")
     list(APPEND LEVEL_DB_FILES
         port/port_posix.h
         port/port_posix.cc
@@ -170,7 +185,7 @@ target_link_libraries(leveldb
 )
 
 add_executable(leveldbutil
-    db/leveldb_main.cc)
+    db/leveldbutil.cc)
 
 target_link_libraries(leveldbutil
     leveldb)
@@ -232,24 +247,30 @@ function(LEVELDB_ADD_TEST TESTNAME TESTFILE)
     add_dependencies(RUN_LEVELDB_UNIT_TESTS leveldb_${TESTNAME}_test)
 endfunction(LEVELDB_ADD_TEST)
 
-LEVELDB_ADD_TEST(env          util/env_test.cc)
-LEVELDB_ADD_TEST(crc32        util/crc32c_test.cc)
-LEVELDB_ADD_TEST(coding       util/coding_test.cc)
-LEVELDB_ADD_TEST(arena        util/arena_test.cc)
-LEVELDB_ADD_TEST(cache        util/cache_test.cc)
-LEVELDB_ADD_TEST(table        table/table_test.cc)
 # IMPORTANT: Commented a test that fails randomly.
-# LEVELDB_ADD_TEST(autocompact  db/autocompact_test.cc)
-LEVELDB_ADD_TEST(corruption   db/corruption_test.cc)
-LEVELDB_ADD_TEST(dbformat     db/dbformat_test.cc)
-LEVELDB_ADD_TEST(filename     db/filename_test.cc)
-LEVELDB_ADD_TEST(log          db/log_test.cc)
-LEVELDB_ADD_TEST(skiplist     db/skiplist_test.cc)
-LEVELDB_ADD_TEST(version_edit db/version_edit_test.cc)
-LEVELDB_ADD_TEST(write_batch  db/write_batch_test.cc)
-LEVELDB_ADD_TEST(version_set  db/version_set_test.cc)
-LEVELDB_ADD_TEST(filter_block table/filter_block_test.cc)
-LEVELDB_ADD_TEST(bloom        util/bloom_test.cc)
-LEVELDB_ADD_TEST(hash         util/hash_test.cc)
-LEVELDB_ADD_TEST(db_bench     db/db_bench.cc)
-LEVELDB_ADD_TEST(db db/db_test.cc)
+LEVELDB_ADD_TEST(autocompact      db/autocompact_test.cc)
+LEVELDB_ADD_TEST(c  		      db/c_test.cc)
+LEVELDB_ADD_TEST(corruption       db/corruption_test.cc)
+LEVELDB_ADD_TEST(db_bench         db/db_bench.cc)
+LEVELDB_ADD_TEST(db 		      db/db_test.cc)
+LEVELDB_ADD_TEST(dbformat         db/dbformat_test.cc)
+LEVELDB_ADD_TEST(ddfaultinjection db/fault_injection_test.cc)
+LEVELDB_ADD_TEST(filename         db/filename_test.cc)
+LEVELDB_ADD_TEST(log              db/log_test.cc)
+LEVELDB_ADD_TEST(dbrecovery       db/recovery_test.cc)
+LEVELDB_ADD_TEST(skiplist         db/skiplist_test.cc)
+LEVELDB_ADD_TEST(version_edit     db/version_edit_test.cc)
+LEVELDB_ADD_TEST(version_set      db/version_set_test.cc)
+LEVELDB_ADD_TEST(write_batch      db/write_batch_test.cc)
+
+LEVELDB_ADD_TEST(filter_block     table/filter_block_test.cc)
+LEVELDB_ADD_TEST(table            table/table_test.cc)
+
+LEVELDB_ADD_TEST(arena            util/arena_test.cc)
+LEVELDB_ADD_TEST(bloom            util/bloom_test.cc)
+LEVELDB_ADD_TEST(cache            util/cache_test.cc)
+LEVELDB_ADD_TEST(coding           util/coding_test.cc)
+LEVELDB_ADD_TEST(crc32            util/crc32c_test.cc)
+LEVELDB_ADD_TEST(env              util/env_test.cc)
+LEVELDB_ADD_TEST(hash             util/hash_test.cc)
+
