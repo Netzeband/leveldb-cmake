@@ -8,7 +8,7 @@ build_script:
 
     cd build
 
-    cmake -G "NMake Makefiles" ../.. -DCMAKE_INSTALL_PREFIX=../../install/appveyor -DCMAKE_BUILD_TYPE=Debug
+    cmake -G "NMake Makefiles" .. -DCMAKE_INSTALL_PREFIX=../../install/appveyor -DCMAKE_BUILD_TYPE=Debug
 
     nmake install
 test_script:
