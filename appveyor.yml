@@ -1,0 +1,12 @@
+version: 1.0.{build}
+build_script:
+- cmd: >-
+    mkdir build
+
+    cd build
+
+    cmake -G "NMake Makefiles" ../.. -DCMAKE_INSTALL_PREFIX=../../install/appveyor -DCMAKE_BUILD_TYPE=Debug
+
+    nmake install
+test_script:
+- cmd: nmake test
