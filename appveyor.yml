@@ -2,7 +2,7 @@ version: 1.0.{build}
 clone_folder: c:\projects\leveldb
 build_script:
 - cmd: >-
-    cd leveldb
+    cd c:\projects\leveldb
 
     mkdir build
 
