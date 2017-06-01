@@ -5,7 +5,7 @@ init:
 - cmd: '"C:\Program Files\Microsoft SDKs\Windows\v7.1\Bin\SetEnv.cmd" /x64'
 build_script:
 - cmd: >-
-    dir C:\Libraries\boost_1_60_0\lib64-msvc-14.0
+    dir C:\Libraries\boost_1_62_0\lib64-msvc-14.0
 
     cd c:\projects\leveldb
 
@@ -15,7 +15,7 @@ build_script:
 
     cmake --version
 
-    cmake -G "NMake Makefiles" .. -DCMAKE_INSTALL_PREFIX=../../install/appveyor -DCMAKE_BUILD_TYPE=Debug -DBOOST_LIBRARYDIR=C:\Libraries\boost_1_60_0\lib64-msvc-14.0
+    cmake -G "NMake Makefiles" .. -DCMAKE_INSTALL_PREFIX=../../install/appveyor -DCMAKE_BUILD_TYPE=Debug -DBOOST_LIBRARYDIR=C:\Libraries\boost_1_62_0\lib64-msvc-14.0 -DBOOST_ROOT=C:\Libraries\boost_1_62_0
 
     nmake install
 test_script:
