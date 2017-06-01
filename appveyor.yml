@@ -5,15 +5,15 @@ init:
 build_script:
 - cmd: >-
     dir C:\Libraries\boost_1_60_0\lib64-msvc-14.0
-	
+
     cd c:\projects\leveldb
-	
+
     mkdir build
-	
+
     cd build
-	
+
     cmake --version
-	
+
     cmake -G "NMake Makefiles" .. -DCMAKE_INSTALL_PREFIX=../../install/appveyor -DCMAKE_BUILD_TYPE=Debug -DBOOST_ROOT=C:\Libraries\boost_1_60_0 -DBOOST_LIBRARYDIR=C:\Libraries\boost_1_60_0\lib64-msvc-14.0
 
     nmake install
