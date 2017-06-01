@@ -205,6 +205,7 @@ TEST(RecoveryTest, LargeManifestCompacted) {
 
 TEST(RecoveryTest, NoLogFiles) {
   ASSERT_OK(Put("foo", "bar"));
+  Close();
   ASSERT_EQ(1, DeleteLogFiles());
   Open();
   ASSERT_EQ("NOT_FOUND", Get("foo"));

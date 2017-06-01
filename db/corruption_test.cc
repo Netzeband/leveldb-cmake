@@ -46,14 +46,22 @@ class CorruptionTest {
   }
 
   ~CorruptionTest() {
-     delete db_;
+     Close();
      DestroyDB(dbname_, Options());
      delete tiny_cache_;
   }
+  
+  void Close()
+  {
+    if (db_ != NULL)
+	{
+	  delete(db_);
+	  db_ = NULL;
+	}
+  }
 
   Status TryReopen() {
-    delete db_;
-    db_ = NULL;
+    Close();
     return DB::Open(options_, dbname_, &db_);
   }
 
@@ -62,8 +70,7 @@ class CorruptionTest {
   }
 
   void RepairDB() {
-    delete db_;
-    db_ = NULL;
+    Close();
     ASSERT_OK(::leveldb::RepairDB(dbname_, options_));
   }
 
@@ -170,7 +177,7 @@ class CorruptionTest {
       contents[i + offset] ^= 0x80;
     }
     s = WriteStringToFile(Env::Default(), contents, fname);
-    ASSERT_TRUE(s.ok()) << s.ToString();
+    ASSERT_TRUE(s.ok()) << s.ToString();	
   }
 
   int Property(const std::string& name) {
@@ -240,7 +247,9 @@ TEST(CorruptionTest, TableFile) {
   dbi->TEST_CompactRange(0, NULL, NULL);
   dbi->TEST_CompactRange(1, NULL, NULL);
 
+  Close();
   Corrupt(kTableFile, 100, 1);
+  Reopen();
   Check(90, 99);
 }
 
@@ -254,6 +263,7 @@ TEST(CorruptionTest, TableFileRepair) {
   dbi->TEST_CompactRange(0, NULL, NULL);
   dbi->TEST_CompactRange(1, NULL, NULL);
 
+  Close();
   Corrupt(kTableFile, 100, 1);
   RepairDB();
   Reopen();
@@ -265,6 +275,7 @@ TEST(CorruptionTest, TableFileIndexData) {
   DBImpl* dbi = reinterpret_cast<DBImpl*>(db_);
   dbi->TEST_CompactMemTable();
 
+  Close();
   Corrupt(kTableFile, -2000, 500);
   Reopen();
   Check(5000, 9999);
@@ -322,7 +333,9 @@ TEST(CorruptionTest, CompactionInputError) {
   const int last = config::kMaxMemCompactLevel;
   ASSERT_EQ(1, Property("leveldb.num-files-at-level" + NumberToString(last)));
 
+  Close();
   Corrupt(kTableFile, 100, 1);
+  Reopen();
   Check(5, 9);
 
   // Force compactions by writing lots of values
@@ -340,7 +353,10 @@ TEST(CorruptionTest, CompactionInputErrorParanoid) {
   for (int i = 0; i < 2; i++) {
     Build(10);
     dbi->TEST_CompactMemTable();
+	Close();
     Corrupt(kTableFile, 100, 1);
+	Reopen();
+	dbi = reinterpret_cast<DBImpl*>(db_);
     env_.SleepForMicroseconds(100000);
   }
   dbi->CompactRange(NULL, NULL);
@@ -355,8 +371,11 @@ TEST(CorruptionTest, UnrelatedKeys) {
   Build(10);
   DBImpl* dbi = reinterpret_cast<DBImpl*>(db_);
   dbi->TEST_CompactMemTable();
+  Close();
   Corrupt(kTableFile, 100, 1);
-
+  Reopen();
+  dbi = reinterpret_cast<DBImpl*>(db_);
+  
   std::string tmp1, tmp2;
   ASSERT_OK(db_->Put(WriteOptions(), Key(1000, &tmp1), Value(1000, &tmp2)));
   std::string v;
