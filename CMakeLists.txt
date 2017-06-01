@@ -199,6 +199,11 @@ install(TARGETS leveldbutil
     LIBRARY DESTINATION lib
     ARCHIVE DESTINATION lib)
 
+install(TARGETS leveldb
+    RUNTIME DESTINATION bin
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib)
+
 ##################################### TESTS #######################################
 # Every leveldb test file has to be compiled as an independant binary
 # because of the test framework used by leveldb.
