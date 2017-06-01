@@ -1,3 +1,11 @@
+# LevelDB 1.20 for Windows
+
+[![Build status](https://ci.appveyor.com/api/projects/status/vc27f8u50kxxys34/branch/master?svg=true)](https://ci.appveyor.com/project/Netzeband/leveldb-cmake/branch/master)
+
+This repository contains LevelDB 1.20 for Windows 64bit and 32bit. It uses the port of LevelDB 1.18 from https://github.com/bureau14/leveldb/blob/master and adapts it to be compatible with LevelDB 1.20.
+
+# Original LevelDB Readme:
+
 **LevelDB is a fast key-value storage library written at Google that provides an ordered mapping from string keys to string values.**
 
 [![Build Status](https://travis-ci.org/google/leveldb.svg?branch=master)](https://travis-ci.org/google/leveldb)
