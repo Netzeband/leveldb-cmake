@@ -16,6 +16,11 @@
 #   snappy_ROOT - The root directory where to find snappy. If this is not
 #                 set, the default paths are searched.
 
+if(NOT snappy_ROOT AND (NOT "$ENV{SNAPPY_ROOT}" EQUAL ""))
+	set(snappy_ROOT $ENV{SNAPPY_ROOT})
+	message(STATUS "Read snappy root-directory from environment variable SNAPPY_ROOT: ${snappy_ROOT}")
+endif()
+
 if(NOT snappy_ROOT)
     find_path(snappy_INCLUDE_DIRS snappy.h)
     find_library(snappy_LIBRARIES NAMES snappy)

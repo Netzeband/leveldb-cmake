@@ -12,7 +12,7 @@ cmake_minimum_required(VERSION 3.0.2 FATAL_ERROR)
 project(leveldb CXX)    
 
 include(CTest)
-set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake) 
+set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake) 
 
 set(CMAKE_DEBUG_POSTFIX "d")
 
