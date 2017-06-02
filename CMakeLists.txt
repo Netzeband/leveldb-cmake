@@ -12,6 +12,7 @@ cmake_minimum_required(VERSION 3.0.2 FATAL_ERROR)
 project(leveldb CXX)    
 
 include(CTest)
+set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake) 
 
 set(CMAKE_DEBUG_POSTFIX "d")
 
@@ -26,7 +27,24 @@ find_package(Boost COMPONENTS
 	thread
     REQUIRED)
 
-set(SNAPPY_LIBRARY "")
+find_package(Snappy)
+
+if (snappy_FOUND)
+	set(SNAPPY_LIBRARY "${snappy_LIBRARIES}")
+	set(SNAPPY_INCLUDE "${snappy_INCLUDE_DIRS}")	
+	
+	add_definitions(
+		-DSNAPPY
+	)
+else()
+	message(WARNING "Cannot find Snappy library. Thus building levelDB without Snappy-Support. \
+This will lead to issues if working with compressed libraries. For enabling snappy support, \
+please Specify the variable snappy_ROOT.")
+
+	set(SNAPPY_LIBRARY )
+	set(SNAPPY_INCLUDE )
+endif()
+
 
 string(REGEX MATCH "clang" CLANG ${CMAKE_CXX_COMPILER})
 
@@ -175,13 +193,14 @@ add_library(leveldb ${LEVEL_DB_FILES})
 
 target_include_directories(leveldb 
     PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include
-    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} 
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${SNAPPY_INCLUDE}
 )
 
 target_link_libraries(leveldb 
     PRIVATE
     ${Boost_LIBRARIES}
     ${Pthread_LIBRARY}
+	${SNAPPY_LIBRARY}
 )
 
 add_executable(leveldbutil
@@ -205,6 +224,10 @@ install(TARGETS leveldb
     ARCHIVE DESTINATION lib)
 
 INSTALL(DIRECTORY "include" DESTINATION ".")
+
+if (snappy_DLLS)
+	install(FILES ${snappy_DLLS} DESTINATION bin)
+endif()
 	
 ##################################### TESTS #######################################
 # Every leveldb test file has to be compiled as an independant binary
@@ -252,6 +275,17 @@ function(LEVELDB_ADD_TEST TESTNAME TESTFILE)
     add_test(NAME leveldb_${TESTNAME}_test COMMAND leveldb_${TESTNAME}_test)
 
     add_dependencies(RUN_LEVELDB_UNIT_TESTS leveldb_${TESTNAME}_test)
+	
+	target_include_directories(leveldb_${TESTNAME}_test
+		PRIVATE ${SNAPPY_INCLUDE}
+	)
+	
+	if (snappy_DLLS)
+		add_custom_command(TARGET leveldb_${TESTNAME}_test POST_BUILD
+					COMMAND ${CMAKE_COMMAND} -E copy
+						${snappy_DLLS} $<TARGET_FILE_DIR:leveldb_${TESTNAME}_test>)
+	endif()
+	
 endfunction(LEVELDB_ADD_TEST)
 
 # IMPORTANT: Commented a test that fails randomly.

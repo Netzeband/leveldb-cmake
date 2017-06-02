@@ -38,7 +38,7 @@
 #define fread_unlocked _fread_nolock
 
 #ifdef SNAPPY
-#include <snappy.h>
+#include <snappy-c.h>
 #endif
 
 #include <string>
@@ -131,9 +131,12 @@ extern void InitOnce(OnceType* once, void (*initializer)());
 inline bool Snappy_Compress(const char* input, size_t length,
                             ::std::string* output) {
 #ifdef SNAPPY
-  output->resize(snappy::MaxCompressedLength(length));
+  //size_t MaxLength = snappy::MaxCompressedLength(length);
+  size_t MaxLength = snappy_max_compressed_length(length);
+  output->resize(MaxLength);
   size_t outlen;
-  snappy::RawCompress(input, length, &(*output)[0], &outlen);
+  //snappy::RawCompress(input, length, &(*output)[0], &outlen);
+  snappy_compress(input, length, &(*output)[0], &outlen);
   output->resize(outlen);
   return true;
 #endif
@@ -144,7 +147,8 @@ inline bool Snappy_Compress(const char* input, size_t length,
 inline bool Snappy_GetUncompressedLength(const char* input, size_t length,
                                          size_t* result) {
 #ifdef SNAPPY
-  return snappy::GetUncompressedLength(input, length, result);
+  //return snappy::GetUncompressedLength(input, length, result);
+  return snappy_uncompressed_length(input, length, result) == SNAPPY_OK;
 #else
   return false;
 #endif
@@ -152,7 +156,9 @@ inline bool Snappy_GetUncompressedLength(const char* input, size_t length,
 
 inline bool Snappy_Uncompress(const char* input, size_t length, char* output) {
 #ifdef SNAPPY
-  return snappy::RawUncompress(input, length, output);
+  //return snappy::RawUncompress(input, length, output);
+  size_t outlen;
+  return snappy_uncompress(input, length, output, &outlen) == SNAPPY_OK;
 #else
   return false;
 #endif
