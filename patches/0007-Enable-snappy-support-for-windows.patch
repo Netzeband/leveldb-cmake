@@ -1,0 +1,205 @@
+From 0e1b0c071be0b942dfa52fc2ff2ffe151e21e866 Mon Sep 17 00:00:00 2001
+From: Andre <andre.netzeband@hm.edu>
+Date: Fri, 2 Jun 2017 16:57:52 +0200
+Subject: [PATCH] Enable snappy support for windows.
+
+---
+ CMakeLists.txt         | 38 ++++++++++++++++++++++++++++++++++--
+ cmake/FindSnappy.cmake | 52 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ port/port_win.h        | 16 +++++++++++-----
+ 3 files changed, 99 insertions(+), 7 deletions(-)
+ create mode 100644 cmake/FindSnappy.cmake
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index f0f1ab9..88b1a81 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -12,6 +12,7 @@ cmake_minimum_required(VERSION 3.0.2 FATAL_ERROR)
+ project(leveldb CXX)    
+ 
+ include(CTest)
++set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake) 
+ 
+ set(CMAKE_DEBUG_POSTFIX "d")
+ 
+@@ -26,7 +27,24 @@ find_package(Boost COMPONENTS
+ 	thread
+     REQUIRED)
+ 
+-set(SNAPPY_LIBRARY "")
++find_package(Snappy)
++
++if (snappy_FOUND)
++	set(SNAPPY_LIBRARY "${snappy_LIBRARIES}")
++	set(SNAPPY_INCLUDE "${snappy_INCLUDE_DIRS}")	
++	
++	add_definitions(
++		-DSNAPPY
++	)
++else()
++	message(WARNING "Cannot find Snappy library. Thus building levelDB without Snappy-Support. \
++This will lead to issues if working with compressed libraries. For enabling snappy support, \
++please Specify the variable snappy_ROOT.")
++
++	set(SNAPPY_LIBRARY )
++	set(SNAPPY_INCLUDE )
++endif()
++
+ 
+ string(REGEX MATCH "clang" CLANG ${CMAKE_CXX_COMPILER})
+ 
+@@ -175,13 +193,14 @@ add_library(leveldb ${LEVEL_DB_FILES})
+ 
+ target_include_directories(leveldb 
+     PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include
+-    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} 
++    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${SNAPPY_INCLUDE}
+ )
+ 
+ target_link_libraries(leveldb 
+     PRIVATE
+     ${Boost_LIBRARIES}
+     ${Pthread_LIBRARY}
++	${SNAPPY_LIBRARY}
+ )
+ 
+ add_executable(leveldbutil
+@@ -205,6 +224,10 @@ install(TARGETS leveldb
+     ARCHIVE DESTINATION lib)
+ 
+ INSTALL(DIRECTORY "include" DESTINATION ".")
++
++if (snappy_DLLS)
++	install(FILES ${snappy_DLLS} DESTINATION bin)
++endif()
+ 	
+ ##################################### TESTS #######################################
+ # Every leveldb test file has to be compiled as an independant binary
+@@ -252,6 +275,17 @@ function(LEVELDB_ADD_TEST TESTNAME TESTFILE)
+     add_test(NAME leveldb_${TESTNAME}_test COMMAND leveldb_${TESTNAME}_test)
+ 
+     add_dependencies(RUN_LEVELDB_UNIT_TESTS leveldb_${TESTNAME}_test)
++	
++	target_include_directories(leveldb_${TESTNAME}_test
++		PRIVATE ${SNAPPY_INCLUDE}
++	)
++	
++	if (snappy_DLLS)
++		add_custom_command(TARGET leveldb_${TESTNAME}_test POST_BUILD
++					COMMAND ${CMAKE_COMMAND} -E copy
++						${snappy_DLLS} $<TARGET_FILE_DIR:leveldb_${TESTNAME}_test>)
++	endif()
++	
+ endfunction(LEVELDB_ADD_TEST)
+ 
+ # IMPORTANT: Commented a test that fails randomly.
+diff --git a/cmake/FindSnappy.cmake b/cmake/FindSnappy.cmake
+new file mode 100644
+index 0000000..a3d0e2e
+--- /dev/null
++++ b/cmake/FindSnappy.cmake
+@@ -0,0 +1,52 @@
++# This file was taken from the Caffe project: https://github.com/lemire/FastPFor
++# It has been adapted to also find the snappy windows binaries.
++
++# This code is released under the
++# Apache License Version 2.0 http://www.apache.org/licenses/.
++#
++# Copyright (c) 2012 Louis Dionne
++#
++# Find snappy compression library and includes. This module defines:
++#   snappy_INCLUDE_DIRS - The directories containing snappy's headers.
++#   snappy_LIBRARIES    - A list of snappy's libraries.
++#   snappy_DLLS         - A list of snappy's DLL on windows.
++#   snappy_FOUND        - Whether snappy was found.
++#
++# This module can be controlled by setting the following variables:
++#   snappy_ROOT - The root directory where to find snappy. If this is not
++#                 set, the default paths are searched.
++
++if(NOT snappy_ROOT)
++    find_path(snappy_INCLUDE_DIRS snappy.h)
++    find_library(snappy_LIBRARIES NAMES snappy)
++else()
++    find_path(snappy_INCLUDE_DIRS snappy.h NO_DEFAULT_PATH PATHS ${snappy_ROOT} ${snappy_ROOT}/include)
++    find_library(snappy_LIBRARIES NAMES snappy NO_DEFAULT_PATH PATHS ${snappy_ROOT} ${snappy_ROOT}/lib)
++endif()
++
++if(snappy_INCLUDE_DIRS AND NOT snappy_LIBRARIES)
++	if( CMAKE_SIZEOF_VOID_P EQUAL 8 )
++		find_library(snappy_LIBRARIES NAMES snappy64 NO_DEFAULT_PATH PATHS ${snappy_ROOT} ${snappy_ROOT}/native)
++		find_file(snappy_DLLS NAMES "snappy64.dll" NO_DEFAULT_PATH PATHS ${snappy_ROOT}/native)
++	else()
++		find_library(snappy_LIBRARIES NAMES snappy32 NO_DEFAULT_PATH PATHS ${snappy_ROOT} ${snappy_ROOT}/native)
++		find_file(snappy_DLLS NAMES "snappy32.dll" NO_DEFAULT_PATH PATHS ${snappy_ROOT}/native)
++	endif()	
++endif()
++
++if(snappy_INCLUDE_DIRS AND snappy_LIBRARIES)
++    set(snappy_FOUND TRUE)
++	message(STATUS "Found Snappy:")
++	message(STATUS " * Snappy include path: ${snappy_INCLUDE_DIRS}")
++	message(STATUS " * Snappy library:      ${snappy_LIBRARIES}")
++	if (snappy_DLLS)
++		message(STATUS " * Snappy DLL:      ${snappy_DLLS}")
++	endif()
++else()
++    set(snappy_FOUND FALSE)
++    set(snappy_INCLUDE_DIR)
++    set(snappy_LIBRARIES)
++	set(snappy_DLLS)
++endif()
++
++mark_as_advanced(snappy_LIBRARIES snappy_INCLUDE_DIRS snappy_DLLS)
+diff --git a/port/port_win.h b/port/port_win.h
+index ea9a487..12f0428 100644
+--- a/port/port_win.h
++++ b/port/port_win.h
+@@ -38,7 +38,7 @@
+ #define fread_unlocked _fread_nolock
+ 
+ #ifdef SNAPPY
+-#include <snappy.h>
++#include <snappy-c.h>
+ #endif
+ 
+ #include <string>
+@@ -131,9 +131,12 @@ extern void InitOnce(OnceType* once, void (*initializer)());
+ inline bool Snappy_Compress(const char* input, size_t length,
+                             ::std::string* output) {
+ #ifdef SNAPPY
+-  output->resize(snappy::MaxCompressedLength(length));
++  //size_t MaxLength = snappy::MaxCompressedLength(length);
++  size_t MaxLength = snappy_max_compressed_length(length);
++  output->resize(MaxLength);
+   size_t outlen;
+-  snappy::RawCompress(input, length, &(*output)[0], &outlen);
++  //snappy::RawCompress(input, length, &(*output)[0], &outlen);
++  snappy_compress(input, length, &(*output)[0], &outlen);
+   output->resize(outlen);
+   return true;
+ #endif
+@@ -144,7 +147,8 @@ inline bool Snappy_Compress(const char* input, size_t length,
+ inline bool Snappy_GetUncompressedLength(const char* input, size_t length,
+                                          size_t* result) {
+ #ifdef SNAPPY
+-  return snappy::GetUncompressedLength(input, length, result);
++  //return snappy::GetUncompressedLength(input, length, result);
++  return snappy_uncompressed_length(input, length, result) == SNAPPY_OK;
+ #else
+   return false;
+ #endif
+@@ -152,7 +156,9 @@ inline bool Snappy_GetUncompressedLength(const char* input, size_t length,
+ 
+ inline bool Snappy_Uncompress(const char* input, size_t length, char* output) {
+ #ifdef SNAPPY
+-  return snappy::RawUncompress(input, length, output);
++  //return snappy::RawUncompress(input, length, output);
++  size_t outlen;
++  return snappy_uncompress(input, length, output, &outlen) == SNAPPY_OK;
+ #else
+   return false;
+ #endif
+-- 
+2.11.1.windows.1
+

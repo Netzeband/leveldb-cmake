@@ -1,0 +1,25 @@
+From a50a0d5ec9613f09a0323d68628150ece9a13bac Mon Sep 17 00:00:00 2001
+From: Andre <andre.netzeband@hm.edu>
+Date: Thu, 1 Jun 2017 19:51:24 +0200
+Subject: [PATCH] added installation of include files.
+
+---
+ CMakeLists.txt | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index bcafa8a..f0f1ab9 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -204,6 +204,8 @@ install(TARGETS leveldb
+     LIBRARY DESTINATION lib
+     ARCHIVE DESTINATION lib)
+ 
++INSTALL(DIRECTORY "include" DESTINATION ".")
++	
+ ##################################### TESTS #######################################
+ # Every leveldb test file has to be compiled as an independant binary
+ # because of the test framework used by leveldb.
+-- 
+2.11.1.windows.1
+

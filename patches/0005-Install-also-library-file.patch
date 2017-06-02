@@ -1,0 +1,28 @@
+From 2778f6eca5a370a4a5ea36dc87df646091dc4ae4 Mon Sep 17 00:00:00 2001
+From: Andre <andre.netzeband@hm.edu>
+Date: Thu, 1 Jun 2017 18:43:40 +0200
+Subject: [PATCH] Install also library file.
+
+---
+ CMakeLists.txt | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 103d000..bcafa8a 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -199,6 +199,11 @@ install(TARGETS leveldbutil
+     LIBRARY DESTINATION lib
+     ARCHIVE DESTINATION lib)
+ 
++install(TARGETS leveldb
++    RUNTIME DESTINATION bin
++    LIBRARY DESTINATION lib
++    ARCHIVE DESTINATION lib)
++
+ ##################################### TESTS #######################################
+ # Every leveldb test file has to be compiled as an independant binary
+ # because of the test framework used by leveldb.
+-- 
+2.11.1.windows.1
+
