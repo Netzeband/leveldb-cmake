@@ -1,0 +1,42 @@
+From fab8454f69fecb7d405638fe2b6a6bed2aa8916b Mon Sep 17 00:00:00 2001
+From: Andre <andre.netzeband@hm.edu>
+Date: Fri, 2 Jun 2017 18:32:46 +0200
+Subject: [PATCH] Check environment variables to find Snappy-root.
+
+---
+ CMakeLists.txt         | 2 +-
+ cmake/FindSnappy.cmake | 5 +++++
+ 2 files changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 88b1a81..b4b38b5 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -12,7 +12,7 @@ cmake_minimum_required(VERSION 3.0.2 FATAL_ERROR)
+ project(leveldb CXX)    
+ 
+ include(CTest)
+-set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake) 
++set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake) 
+ 
+ set(CMAKE_DEBUG_POSTFIX "d")
+ 
+diff --git a/cmake/FindSnappy.cmake b/cmake/FindSnappy.cmake
+index a3d0e2e..7023629 100644
+--- a/cmake/FindSnappy.cmake
++++ b/cmake/FindSnappy.cmake
+@@ -16,6 +16,11 @@
+ #   snappy_ROOT - The root directory where to find snappy. If this is not
+ #                 set, the default paths are searched.
+ 
++if(NOT snappy_ROOT AND (NOT "$ENV{SNAPPY_ROOT}" EQUAL ""))
++	set(snappy_ROOT $ENV{SNAPPY_ROOT})
++	message(STATUS "Read snappy root-directory from environment variable SNAPPY_ROOT: ${snappy_ROOT}")
++endif()
++
+ if(NOT snappy_ROOT)
+     find_path(snappy_INCLUDE_DIRS snappy.h)
+     find_library(snappy_LIBRARIES NAMES snappy)
+-- 
+2.11.1.windows.1
+
